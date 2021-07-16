@@ -5,6 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.concurrent.ThreadLocalRandom;
+
 /**
  * Implements a class to interface with the Pricing Client for price data.
  */
@@ -35,8 +39,7 @@ public class PriceClient {
             Price price = client
                     .get()
                     .uri(uriBuilder -> uriBuilder
-                            .path("services/price/")
-                            .queryParam("vehicleId", vehicleId)
+                            .path("/price/" +vehicleId)
                             .build()
                     )
                     .retrieve().bodyToMono(Price.class).block();
@@ -47,5 +50,19 @@ public class PriceClient {
             log.error("Unexpected error retrieving price for vehicle {}", vehicleId, e);
         }
         return "(consult price)";
+    }
+
+    /**
+     2
+     * Gets a random price to fill in for a given vehicle ID.
+     3
+     *
+     4
+     * @return random price for a vehicle
+    5
+     */
+    private static BigDecimal randomPrice() {
+        return new BigDecimal(ThreadLocalRandom.current().nextDouble(1, 5))
+                .multiply(new BigDecimal(5000d)).setScale(2, RoundingMode.HALF_UP);
     }
 }
