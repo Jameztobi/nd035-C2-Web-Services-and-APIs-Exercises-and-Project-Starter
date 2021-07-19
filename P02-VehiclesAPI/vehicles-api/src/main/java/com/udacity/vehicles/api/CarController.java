@@ -4,14 +4,19 @@ package com.udacity.vehicles.api;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
+import com.udacity.vehicles.domain.Condition;
 import com.udacity.vehicles.domain.car.Car;
 import com.udacity.vehicles.service.CarService;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +34,12 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/cars")
+//I got this idea for implementing customised error message for swagger from the classroom lecture materials
+@ApiResponses(value={
+        @ApiResponse(code=400, message="Bad request-please follow the Api Documentation"),
+        @ApiResponse(code=401, message ="Access cannot be given due to security constraints"),
+        @ApiResponse(code=500, message="The server is down.")
+})
 class CarController {
 
     private final CarService carService;
@@ -84,12 +95,13 @@ class CarController {
     @PutMapping("/{id}")
     ResponseEntity<?> put(@PathVariable Long id, @Valid @RequestBody Car car) {
         Car mainCar=carService.findById(id);
+        mainCar.setCondition(car.getCondition());
         mainCar.setPrice(car.getPrice());
         mainCar.setLocation(car.getLocation());
         mainCar.setDetails(car.getDetails());
         mainCar.setCondition(car.getCondition());
-        Car savedCar=carService.save(car);
-        Resource<Car> resource = assembler.toResource(savedCar);
+        mainCar.setModifiedAt(car.getModifiedAt());
+        Resource<Car> resource = assembler.toResource(carService.save(mainCar));
         return ResponseEntity.ok(resource);
     }
 
